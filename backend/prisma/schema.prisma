@@ -1,0 +1,100 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  userid    Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+  type      userType
+  password  String
+  files     Json?
+  images    Json?
+  isVerifiedArtist Boolean
+  isBlocked    Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  arts      Arts[]         @relation("UserArts")
+  portfolio Portfolio[]    @relation("UserPortfolio")
+  transactions Transaction[] @relation("UserTransactions")
+  wallet    Wallet?
+}
+
+model Portfolio{
+  id       Int      @id @default(autoincrement())
+  title    String
+  description String
+  image    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationship
+  userId      Int
+  user        User     @relation("UserPortfolio", fields: [userId], references: [userid])
+}
+
+model Arts{
+  id       Int      @id @default(autoincrement())
+  title    String
+  description String
+  image    Json?
+  price    Float
+  status   artStatus
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationship
+  userId      Int
+  user        User     @relation("UserArts", fields: [userId], references: [userid])
+}
+
+model Wallet{
+  id       Int      @id @default(autoincrement())
+  amount   Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationship
+  userId    Int       @unique
+  user      User      @relation(fields: [userId], references: [userid])
+  sentTransactions     Transaction[] @relation("FromWallet")
+  receivedTransactions Transaction[] @relation("ToWallet")
+}
+
+model Transaction{
+  id       Int      @id @default(autoincrement())
+  amount   Float
+  from_account Int
+  to_account   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+   // Relationships
+  fromWallet  Wallet   @relation("FromWallet", fields: [from_account], references: [id])
+  toWallet    Wallet   @relation("ToWallet", fields: [to_account], references: [id])
+  user        User?    @relation("UserTransactions", fields: [userId], references: [userid])
+  userId      Int?
+}
+
+
+enum userType {
+  BUYER
+  ARTIST
+  ADMIN
+}
+
+enum artStatus {
+  LIVE
+  DRAFT
+  SOLD
+}
