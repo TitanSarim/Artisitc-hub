@@ -9,14 +9,13 @@ const createPortfolio = catchAsyncError(async (req, res, next) => {
   try {
     const userId = req.user.userid;
     const { title, description } = req.body;
-
     const file = req.file.filename;
 
     const portfolio = await prisma.portfolio.create({
       data: {
         title,
         description,
-        file: JSON.stringify(file),
+        image: file,
         userId,
       },
     });
@@ -34,19 +33,37 @@ const createPortfolio = catchAsyncError(async (req, res, next) => {
 // Update Portfolio
 const updatePortfolio = catchAsyncError(async (req, res, next) => {
   try {
+    const userId = req.user.userid;
     const id = parseInt(req.params.id);
-    const { title, description, image } = req.body;
 
-    const existing = await prisma.portfolio.findUnique({ where: { id } });
-    if (!existing) return next(new errorHandler("Portfolio not found", 404));
+    // Get data from form-data
+    const title = req.body.title;
+    const description = req.body.description;
+    const file = req.file?.filename;
+
+    // Log the parsed data
+
+    const existing = await prisma.portfolio.findFirst({
+      where: { id, userId },
+    });
+
+    if (!existing) {
+      return next(new errorHandler("Portfolio not found or unauthorized", 404));
+    }
+
+    const updateData = {
+      ...(title && { title }),
+      ...(description && { description }),
+    };
+
+    // Only update image if a new file was uploaded
+    if (file) {
+      updateData.image = file;
+    }
 
     const updated = await prisma.portfolio.update({
       where: { id },
-      data: {
-        title,
-        description,
-        image,
-      },
+      data: updateData,
     });
 
     res.status(200).json({
@@ -55,6 +72,7 @@ const updatePortfolio = catchAsyncError(async (req, res, next) => {
       portfolio: updated,
     });
   } catch (error) {
+    console.error("Update error:", error);
     return next(new errorHandler(error.message, 500));
   }
 });

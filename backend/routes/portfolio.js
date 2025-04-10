@@ -11,12 +11,16 @@ const { uploadPortfolio } = require("../middleware/savePortfolio");
 const router = express.Router();
 
 router
-  .route("/create")
-  .post(isAuthenticatedUser, uploadPortfolio.single("files"), createPortfolio);
+  .route("/portfolio/create")
+  .post(isAuthenticatedUser, uploadPortfolio.single("file"), createPortfolio);
 
-router.route("/update/:id").patch(isAuthenticatedUser, updatePortfolio);
+router
+  .route("/portfolio/update/:id")
+  .put(isAuthenticatedUser, uploadPortfolio.single("file"), updatePortfolio);
 
-router.route("/delete/:id").delete(isAuthenticatedUser, deletePortfolio);
+router
+  .route("/portfolio/delete/:id")
+  .delete(isAuthenticatedUser, deletePortfolio);
 
 router.route("/portfolio").get(isAuthenticatedUser, getPortfolio);
 

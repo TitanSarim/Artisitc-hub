@@ -33,10 +33,13 @@ app.use(bodyParser.json());
 // Import routes
 const authentication = require("./routes/auth");
 const users = require("./routes/user");
-
+const arts = require("./routes/arts");
+const portfolio = require("./routes/portfolio");
 // Use routes
 app.use("/api/v1", authentication);
 app.use("/api/v1", users);
+app.use("/api/v1", arts);
+app.use("/api/v1", portfolio);
 
 app.use(errorMiddleware);
 

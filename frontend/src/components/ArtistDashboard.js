@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
+import PortfolioList from "./ArtistDashboard/PortfolioList";
+import UploadArtworks from "./ArtistDashboard/UploadArtworks";
+import ArtList from "./ArtistDashboard/ArtList";
 
 const ArtistDashboard = () => {
   const [activeSection, setActiveSection] = useState("portfolio");
@@ -14,78 +17,11 @@ const ArtistDashboard = () => {
   const renderSection = () => {
     switch (activeSection) {
       case "portfolio":
-        return (
-          <div>
-            <h2>My Portfolio</h2>
-            <p>Manage and showcase your portfolio here.</p>
-            {profile.name && (
-              <div className="profile-info">
-                <img
-                  src={
-                    profile.profilePic
-                      ? URL.createObjectURL(profile.profilePic)
-                      : "/default-profile.png"
-                  }
-                  alt="Profile"
-                  className="profile-pic"
-                />
-                <h3>{profile.name}</h3>
-                <p>{profile.email}</p>
-              </div>
-            )}
-            <div className="portfolio-cards">
-              <div className="card">
-                <img src="/path-to-art1.jpg" alt="Artwork 1" />
-                <h3>Artwork Title 1</h3>
-                <p>Description of artwork 1</p>
-              </div>
-              <div className="card">
-                <img src="/path-to-art2.jpg" alt="Artwork 2" />
-                <h3>Artwork Title 2</h3>
-                <p>Description of artwork 2</p>
-              </div>
-              {/* Add more cards as needed */}
-            </div>
-          </div>
-        );
+        return <PortfolioList />;
       case "upload":
-        return (
-          <div>
-            <h2>Upload Artworks</h2>
-            <p>Upload new art pieces to your collection.</p>
-            <form className="form" onSubmit={(e) => handleSubmit(e)}>
-              <label className="form-label">
-                <span>Artwork Title:</span>
-                <input type="text" name="title" required className="input" />
-              </label>
-              <label className="form-label">
-                <span>Upload File:</span>
-                <input type="file" name="file" required className="input" />
-              </label>
-              <button type="submit" className="btn-submit">
-                Upload
-              </button>
-            </form>
-          </div>
-        );
+        return <UploadArtworks />;
       case "artworks":
-        return (
-          <div>
-            <h2>My Artworks</h2>
-            <p>View and manage your uploaded artworks here.</p>
-            <div className="artwork-cards">
-              <div className="card">
-                <img src="/path-to-artwork1.jpg" alt="Artwork 1" />
-                <h3>Artwork Title</h3>
-              </div>
-              <div className="card">
-                <img src="/path-to-artwork2.jpg" alt="Artwork 2" />
-                <h3>Artwork Title</h3>
-              </div>
-              {/* More artwork cards can be added dynamically */}
-            </div>
-          </div>
-        );
+        return <ArtList />;
       case "editProfile":
         return (
           <div>
@@ -192,7 +128,7 @@ const ArtistDashboard = () => {
           <main className="content">{renderSection()}</main>
         </div>
       ) : (
-        <div className="not-verifeid">
+        <div className="not-verified">
           <p>You are not approved by admin</p>
         </div>
       )}
@@ -204,12 +140,12 @@ const ArtistDashboard = () => {
           padding: 20px;
           border-radius: 10px;
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-          max-width: 900px;
+          max-width: 1200px;
           margin: auto;
           border: 1px solid #d3e9d3;
           margin-top: 30px;
           margin-bottom: 30px;
-          height: ${user.isVerifiedArtist === true ? "100vh" : "30vh"};
+          min-height: ${user.isVerifiedArtist === true ? "100vh" : "30vh"};
         }
 
         .header {
@@ -229,9 +165,11 @@ const ArtistDashboard = () => {
         .header p {
           color: #555;
         }
-        .not-verifeid {
+
+        .not-verified {
           font-size: 20px;
           text-align: center;
+          padding: 20px;
         }
 
         .nav {
@@ -309,7 +247,6 @@ const ArtistDashboard = () => {
           background: #55aa55;
         }
 
-        .portfolio-cards,
         .artwork-cards {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -337,21 +274,6 @@ const ArtistDashboard = () => {
         .card p {
           margin: 10px;
           color: #666;
-        }
-
-        .profile-info {
-          display: flex;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-
-        .profile-pic {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          margin-right: 20px;
-          object-fit: cover;
-          border: 2px solid #ccc;
         }
       `}</style>
     </div>

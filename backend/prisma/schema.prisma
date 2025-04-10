@@ -48,6 +48,7 @@ model Arts{
   description String
   image    Json?
   price    Float
+  category String
   status   artStatus
   isApproved Boolean @default(false)
   createdAt DateTime @default(now())

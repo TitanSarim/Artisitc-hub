@@ -4,28 +4,29 @@ const { PrismaClient, artStatus } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-// Create new art
+// Create Art
 const createArt = catchAsyncError(async (req, res, next) => {
   try {
     const userId = req.user.userid;
-    const { title, description, price } = req.body;
-    const file = req.file?.filename;
+    const { title, description, category, price } = req.body;
+    const file = req.file.filename;
 
-    const newArt = await prisma.arts.create({
+    const art = await prisma.arts.create({
       data: {
         title,
         description,
+        category,
         price: parseFloat(price),
+        image: file,
         status: artStatus.DRAFT,
-        image: JSON.stringify(file),
         userId,
       },
     });
 
     res.status(201).json({
       success: true,
-      message: "Art created successfully",
-      art: newArt,
+      message: "Art created successfully.",
+      art,
     });
   } catch (error) {
     return next(new errorHandler(error.message, 500));
