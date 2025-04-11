@@ -132,12 +132,22 @@ const getAllArts = catchAsyncError(async (req, res, next) => {
 const getAllPublicArts = catchAsyncError(async (req, res, next) => {
   try {
     const arts = await prisma.arts.findMany({
+      // where: { status: artStatus.LIVE },
       orderBy: { createdAt: "desc" },
+      include: {
+        user: true,
+      },
     });
 
     const formatted = arts.map((art) => ({
       ...art,
       imageUrl: art.image ? `${process.env.API_URL}/Arts/${art.image}` : null,
+      user: {
+        ...art.user,
+        profileImage: art.user.images
+          ? `${process.env.API_URL}/Images/${JSON.parse(art.user.images)}`
+          : null,
+      },
     }));
 
     res.status(200).json({
@@ -184,6 +194,9 @@ const getSinglelPublicArt = catchAsyncError(async (req, res, next) => {
 
     const art = await prisma.arts.findFirst({
       where: { id },
+      include: {
+        user: true,
+      },
     });
 
     if (!art) {
@@ -193,6 +206,12 @@ const getSinglelPublicArt = catchAsyncError(async (req, res, next) => {
     const artWithUrl = {
       ...art,
       imageUrl: art.image ? `${process.env.API_URL}/Arts/${art.image}` : null,
+      user: {
+        ...art.user,
+        profileImage: art.user.images
+          ? `${process.env.API_URL}/Images/${JSON.parse(art.user.images)}`
+          : null,
+      },
     };
 
     res.status(200).json({

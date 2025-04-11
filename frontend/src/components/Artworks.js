@@ -1,194 +1,388 @@
-import React, { useState, useEffect } from "react";
-
-// Sample Digital Artwork Data (Mock Data)
-const sampleArtworks = [
-  {
-    id: 1,
-    title: "Digital Dreamscape",
-    artist: "John Doe",
-    year: "2022",
-    description: "A vivid digital painting blending surreal and abstract elements.",
-    imageUrl: "https://th.bing.com/th/id/OIP.Wm_UxK_R4SX4i9U4l7-y_AHaFW?rs=1&pid=ImgDetMain",
-    price: "$150",
-  },
-  {
-    id: 2,
-    title: "Abstract Horizon",
-    artist: "Jane Smith",
-    year: "2023",
-    description: "A digital art piece exploring the intersection of geometry and nature.",
-    imageUrl: "https://th.bing.com/th/id/OIP.h-36wVnfm2dtutlT3MxxSAHaFj?rs=1&pid=ImgDetMain",
-    price: "$200",
-  },
-  {
-    id: 3,
-    title: "Neon Lights",
-    artist: "Alex Johnson",
-    year: "2021",
-    description: "A futuristic cityscape illuminated by glowing neon lights.",
-    imageUrl: "https://th.bing.com/th/id/R.b74d95f1c02650ccd98257dfe84a7c4d?rik=%2fL7LF1wxNKkCUQ&pid=ImgRaw&r=0",
-    price: "$250",
-  },
-];
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { listPublicArts } from "../actions/artActions";
 
 const Artworks = () => {
-  const [artworks, setArtworks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const dispatch = useDispatch();
+  const { publicArts, loading, error } = useSelector((state) => state.art);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [category, setCategory] = useState("all");
+  const [priceRange, setPriceRange] = useState("all");
+  const [filteredArts, setFilteredArts] = useState([]);
 
   useEffect(() => {
-    const fetchArtworks = async () => {
-      setTimeout(() => {
-        setArtworks(sampleArtworks);
-        setLoading(false);
-      }, 1000);
-    };
+    dispatch(listPublicArts());
+  }, [dispatch]);
 
-    fetchArtworks();
-  }, []);
+  useEffect(() => {
+    let filtered = publicArts || [];
 
-  const handlePurchase = (title) => {
-    alert(`Thank you for purchasing "${title}"!`);
-  };
+    // Apply search filter with case-insensitive matching
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (art) =>
+          art.title?.toLowerCase().includes(searchLower) ||
+          art.description?.toLowerCase().includes(searchLower) ||
+          art.category?.toLowerCase().includes(searchLower) ||
+          art.artist?.username?.toLowerCase().includes(searchLower)
+      );
+    }
 
-  const handleMouseEnter = (id) => {
-    setHoveredCard(id);
-  };
+    // Apply category filter with case-insensitive matching
+    if (category !== "all") {
+      filtered = filtered.filter(
+        (art) => art.category?.toLowerCase() === category.toLowerCase()
+      );
+    }
 
-  const handleMouseLeave = () => {
-    setHoveredCard(null);
+    // Apply price filter
+    if (priceRange !== "all") {
+      const [min, max] = priceRange.split("-").map(Number);
+      filtered = filtered.filter((art) => {
+        const price = art.price || 0;
+        return price >= min && price <= max;
+      });
+    }
+
+    setFilteredArts(filtered);
+  }, [publicArts, searchTerm, category, priceRange]);
+
+  const categories = [
+    "all",
+    "Painting",
+    "Drawing",
+    "Sculpture",
+    "Photography",
+    "Digital Art",
+    "Mixed Media",
+  ];
+
+  const priceRanges = [
+    { label: "All Prices", value: "all" },
+    { label: "Under $100", value: "0-100" },
+    { label: "$100 - $500", value: "100-500" },
+    { label: "$500 - $1000", value: "500-1000" },
+    { label: "Over $1000", value: "1000-999999" },
+  ];
+
+  const handleAddToCart = (art) => {
+    // Will implement cart functionality later
+    console.log("Added to cart:", art);
   };
 
   if (loading) {
-    return <div style={styles.loading}>Loading...</div>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading artworks...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <p>Error loading artworks: {error}</p>
+      </div>
+    );
   }
 
   return (
-    <div style={styles.artworkPage}>
-      <h1 style={styles.pageTitle}>Digital Artworks</h1>
-      <div style={styles.artworkGrid}>
-        {artworks.map((artwork) => (
-          <div
-            key={artwork.id}
-            style={{
-              ...styles.artworkCard,
-              ...(hoveredCard === artwork.id ? styles.artworkCardHover : {}),
-            }}
-            onMouseEnter={() => handleMouseEnter(artwork.id)}
-            onMouseLeave={handleMouseLeave}
+    <div className="artworks-container">
+      <h1 className="page-title">Explore Artworks</h1>
+      <p className="page-subtitle">
+        Discover amazing artworks from talented artists
+      </p>
+
+      <div className="filters-container">
+        <div className="search-filter">
+          <input
+            type="text"
+            placeholder="Search artworks..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="category-filter">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
           >
-            <img
-              src={artwork.imageUrl}
-              alt={artwork.title}
-              style={styles.artworkCardImage}
-            />
-            <div style={styles.artworkInfo}>
-              <h3 style={styles.artworkInfoTitle}>{artwork.title}</h3>
-              <p style={styles.artworkInfoText}><strong>Artist:</strong> {artwork.artist}</p>
-              <p style={styles.artworkInfoText}><strong>Year:</strong> {artwork.year}</p>
-              <p style={styles.artworkInfoText}><strong>Price:</strong> {artwork.price}</p>
-              <p style={styles.artworkDescription}>{artwork.description}</p>
-              <button
-                style={styles.purchaseButton}
-                onClick={() => handlePurchase(artwork.title)}
-              >
-                Purchase
-              </button>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="price-filter">
+          <select
+            value={priceRange}
+            onChange={(e) => setPriceRange(e.target.value)}
+          >
+            {priceRanges.map((range) => (
+              <option key={range.value} value={range.value}>
+                {range.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="artworks-grid">
+        {filteredArts.map((art) => (
+          <div key={art._id} className="artwork-card">
+            <div className="artwork-image-container">
+              <img
+                src={
+                  art.imageUrl || "/images/albert-dera-ILip77SbmOE-unsplash.jpg"
+                }
+                alt={art.title}
+                className="artwork-image"
+                onError={(e) => {
+                  e.target.src = "/images/albert-dera-ILip77SbmOE-unsplash.jpg";
+                }}
+              />
+            </div>
+            <div className="artwork-info">
+              <h3 className="artwork-title">{art.title}</h3>
+              <p className="artwork-description">{art.description}</p>
+              <div className="artwork-details">
+                <span className="artwork-category">{art.category}</span>
+                <span className="artwork-price">${art.price || 0}</span>
+              </div>
+              <div className="artist-info">
+                <span className="artist-name">
+                  By {art?.user?.username || "Unknown"}
+                </span>
+              </div>
+              {art.status !== "SOLD" && (
+                <button
+                  className="add-to-cart-button"
+                  onClick={() => handleAddToCart(art)}
+                >
+                  Add to Cart
+                </button>
+              )}
             </div>
           </div>
         ))}
       </div>
+
+      {filteredArts.length === 0 && (
+        <div className="no-results">
+          <p>No artworks found matching your criteria</p>
+        </div>
+      )}
+
+      <style jsx>{`
+        .artworks-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+        }
+
+        .page-title {
+          font-size: 2.5rem;
+          color: #333;
+          text-align: center;
+          margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+          font-size: 1.1rem;
+          color: #666;
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .filters-container {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 2rem;
+          flex-wrap: wrap;
+        }
+
+        .search-filter input {
+          padding: 0.75rem 1rem;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          width: 300px;
+          font-size: 1rem;
+        }
+
+        .category-filter select,
+        .price-filter select {
+          padding: 0.75rem 1rem;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          font-size: 1rem;
+          min-width: 200px;
+        }
+
+        .artworks-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 2rem;
+          padding: 1rem;
+        }
+
+        .artwork-card {
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          transition: transform 0.3s ease;
+        }
+
+        .artwork-card:hover {
+          transform: translateY(-5px);
+        }
+
+        .artwork-image-container {
+          position: relative;
+          padding-top: 75%;
+          background: #f3f4f6;
+        }
+
+        .artwork-image {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .artwork-info {
+          padding: 1.5rem;
+        }
+
+        .artwork-title {
+          font-size: 1.25rem;
+          color: #333;
+          margin-bottom: 0.5rem;
+        }
+
+        .artwork-description {
+          color: #666;
+          margin-bottom: 1rem;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .artwork-details {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 1rem;
+        }
+
+        .artwork-category {
+          background: #f3f4f6;
+          padding: 0.25rem 0.75rem;
+          border-radius: 20px;
+          font-size: 0.9rem;
+          color: #666;
+        }
+
+        .artwork-price {
+          font-weight: 600;
+          color: #333;
+        }
+
+        .artist-info {
+          color: #666;
+          font-size: 0.9rem;
+        }
+
+        .no-results {
+          text-align: center;
+          padding: 2rem;
+          color: #666;
+        }
+
+        .loading-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 300px;
+        }
+
+        .loading-spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #3498db;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .error-container {
+          text-align: center;
+          padding: 2rem;
+          color: #dc2626;
+          background: #fee2e2;
+          border-radius: 8px;
+          margin: 2rem auto;
+          max-width: 600px;
+        }
+
+        @media (max-width: 768px) {
+          .filters-container {
+            flex-direction: column;
+          }
+
+          .search-filter input,
+          .category-filter select,
+          .price-filter select {
+            width: 100%;
+          }
+
+          .artworks-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .add-to-cart-button {
+          width: 100%;
+          padding: 0.75rem;
+          background: #4f46e5;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-top: 1rem;
+        }
+
+        .add-to-cart-button:hover {
+          background: #4338ca;
+          transform: translateY(-2px);
+        }
+
+        .add-to-cart-button:active {
+          transform: translateY(0);
+        }
+      `}</style>
     </div>
   );
 };
 
 export default Artworks;
-
-// CSS styles (inline or can be imported as a separate file)
-const styles = {
-  artworkPage: {
-    textAlign: 'center',
-    padding: '40px 20px',
-    backgroundColor: '#f7f7f7',
-  },
-  pageTitle: {
-    fontSize: '2.5rem',
-    fontWeight: 'bold',
-    marginBottom: '30px',
-    color: '#4a7225',
-  },
-  artworkGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '40px',
-    justifyItems: 'center',
-    marginTop: '20px',
-  },
-  artworkCard: {
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    padding: '15px',
-    borderRadius: '15px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    width: '100%',
-    maxWidth: '320px',
-    transition: 'transform 0.3s, box-shadow 0.3s',
-    cursor: 'pointer',
-    overflow: 'hidden',
-    position: 'relative',
-    marginBottom: '20px',
-  },
-  artworkCardHover: {
-    transform: 'scale(1.05)',
-    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
-  },
-  artworkCardImage: {
-    width: '100%',
-    height: 'auto',
-    borderRadius: '8px',
-    objectFit: 'cover',
-    marginBottom: '15px',
-    transition: 'transform 0.3s ease-in-out',
-  },
-  artworkInfo: {
-    paddingTop: '10px',
-    textAlign: 'left',
-    position: 'relative',
-  },
-  artworkInfoTitle: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: '10px',
-  },
-  artworkInfoText: {
-    fontSize: '1rem',
-    color: '#555',
-    margin: '5px 0',
-  },
-  artworkDescription: {
-    fontSize: '0.9rem',
-    color: '#666',
-    marginTop: '10px',
-  },
-  purchaseButton: {
-    display: 'block',
-    marginTop: '15px',
-    padding: '10px 20px',
-    backgroundColor: '#4CAF50',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    transition: 'background-color 0.3s',
-  },
-  purchaseButtonHover: {
-    backgroundColor: '#45a049',
-  },
-  loading: {
-    fontSize: '24px',
-    color: '#333',
-    textAlign: 'center',
-  },
-};

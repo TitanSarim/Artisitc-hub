@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import PortfolioList from "./ArtistDashboard/PortfolioList";
 import UploadArtworks from "./ArtistDashboard/UploadArtworks";
 import ArtList from "./ArtistDashboard/ArtList";
+import EditProfile from "./ArtistDashboard/EditProfile";
 
 const ArtistDashboard = () => {
   const [activeSection, setActiveSection] = useState("portfolio");
@@ -23,29 +24,7 @@ const ArtistDashboard = () => {
       case "artworks":
         return <ArtList />;
       case "editProfile":
-        return (
-          <div>
-            <h2>Edit Profile</h2>
-            <p>Update your personal information and preferences.</p>
-            <form className="form" onSubmit={(e) => handleProfileSubmit(e)}>
-              <label className="form-label">
-                <span>Name:</span>
-                <input type="text" name="name" required className="input" />
-              </label>
-              <label className="form-label">
-                <span>Email:</span>
-                <input type="email" name="email" required className="input" />
-              </label>
-              <label className="form-label">
-                <span>Profile Picture:</span>
-                <input type="file" name="profilePic" className="input" />
-              </label>
-              <button type="submit" className="btn-submit">
-                Save Changes
-              </button>
-            </form>
-          </div>
-        );
+        return <EditProfile />;
       default:
         return <p>Select an option from the dashboard.</p>;
     }

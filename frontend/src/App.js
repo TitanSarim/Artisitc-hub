@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Auth from "./components/Auth/Auth";
 import Navbar from "./components/Navbar"; // Navbar component
 import Artists from "./components/Artists";
-import WhatsNew from "./components/WhatsNew";
 import Artworks from "./components/Artworks";
 import ArtistDashboard from "./components/ArtistDashboard";
 import BuyerDashboard from "./components/BuyerDashboard";
@@ -16,6 +15,11 @@ import Dashboard from "./components/admin/Dashboard";
 import ArtistsLists from "./components/admin/ArtistsLists";
 import { ToastContainer } from "react-toastify";
 import BuyersLists from "./components/admin/BuyersLists";
+import LatestArts from "./components/LatestArts";
+import ArtDetails from "./components/ArtDetails";
+import Cart from "./components/Cart";
+import Wallet from "./components/wallet/Wallet";
+import WalletWrapper from "./components/wallet/WalletWrapper";
 
 const App = () => {
   return (
@@ -25,9 +29,10 @@ const App = () => {
         <Route path="/" element={<Home />} /> {/* Home route */}
         <Route path="/auth" element={<Auth />} /> {/* Login/Sign Up route */}
         {/* Routes for other sections */}
-        <Route path="/whatsnew" element={<WhatsNew />} />
+        <Route path="/whatsnew" element={<LatestArts />} />
         <Route path="/artists" element={<Artists />} />
         <Route path="/artworks" element={<Artworks />} />
+        <Route path="/art/:id" element={<ArtDetails />} />
         {/* protected routes */}
         <Route path="/" element={<ProtectedRoute />}>
           {/* admin panel */}
@@ -41,6 +46,10 @@ const App = () => {
           {/* Role selection route */}
           <Route path="/select-role" element={<RoleSelection />} />
           <Route path="/profile" element={<Profile />} />
+          {/* Wallet and Cart routes */}
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/checkOut" element={<WalletWrapper />} />
+          <Route path="/cart" element={<Cart />} />
         </Route>
       </Routes>
 
@@ -127,7 +136,7 @@ const Home = () => {
                 "Find profiles of talented artists and their amazing works.",
             },
             {
-              title: "What’s New",
+              title: "What's New",
               description:
                 "Stay updated with the latest events and exhibitions.",
             },

@@ -1,13 +1,31 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogOut } from "../actions/userAction";
+import {
+  FaShoppingCart,
+  FaWallet,
+  FaUserCircle,
+  FaChevronDown,
+} from "react-icons/fa";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector((state) => state.user);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -22,52 +40,81 @@ const Navbar = () => {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "20px 40px",
+    padding: "1rem 2rem",
     background: "#ffffff",
-    borderBottom: "2px solid #e5e5e5",
     position: "sticky",
     top: 0,
     zIndex: 1000,
-    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
   };
 
   const logoStyle = {
-    fontSize: "26px",
+    fontSize: "1.8rem",
     fontWeight: "bold",
-    color: "#6a9438",
+    color: "#4f46e5",
     textDecoration: "none",
     display: "flex",
     alignItems: "center",
+    transition: "color 0.3s ease",
   };
 
   const linkContainerStyle = {
     display: "flex",
     alignItems: "center",
-    gap: "20px",
+    gap: "2rem",
   };
 
   const linkStyle = {
     textDecoration: "none",
-    color: "#333333",
-    padding: "10px 20px",
-    borderRadius: "6px",
-    fontSize: "16px",
-    transition: "background-color 0.3s ease, color 0.3s ease",
+    color: "#4b5563",
+    padding: "0.5rem 1rem",
+    borderRadius: "0.5rem",
+    fontSize: "1rem",
+    fontWeight: "500",
+    transition: "all 0.3s ease",
   };
 
-  const buttonStyle = {
-    padding: "10px 20px",
-    borderRadius: "6px",
+  const iconButtonStyle = {
+    background: "none",
     border: "none",
-    backgroundColor: "#6a9438",
-    color: "#ffffff",
+    color: "#4b5563",
+    fontSize: "1.25rem",
     cursor: "pointer",
-    fontWeight: "bold",
-    transition: "background-color 0.3s ease",
+    padding: "0.5rem",
+    borderRadius: "0.5rem",
+    transition: "all 0.3s ease",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
   };
 
-  const buttonHoverStyle = {
-    backgroundColor: "#4a7225",
+  const profileButtonStyle = {
+    ...iconButtonStyle,
+    position: "relative",
+  };
+
+  const dropdownStyle = {
+    position: "absolute",
+    top: "100%",
+    right: 0,
+    background: "#ffffff",
+    borderRadius: "0.5rem",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    padding: "0.5rem",
+    minWidth: "200px",
+    display: isDropdownOpen ? "block" : "none",
+    marginTop: "0.5rem",
+  };
+
+  const dropdownItemStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+    padding: "0.75rem 1rem",
+    color: "#4b5563",
+    textDecoration: "none",
+    borderRadius: "0.375rem",
+    transition: "all 0.2s ease",
   };
 
   return (
@@ -77,7 +124,7 @@ const Navbar = () => {
       </Link>
       <div style={linkContainerStyle}>
         <Link to="/whatsnew" style={linkStyle}>
-          What’s New
+          What's New
         </Link>
         <Link to="/artists" style={linkStyle}>
           Artists
@@ -85,49 +132,69 @@ const Navbar = () => {
         <Link to="/artworks" style={linkStyle}>
           Artworks
         </Link>
-        {user && user.type === "ARTIST" && (
-          <Link
-            to="/artist-dashboard"
-            style={{
-              ...linkStyle,
-              backgroundColor: "#6a9438",
-              color: "#ffffff",
-            }}
-          >
-            My Dashboard
-          </Link>
-        )}
-        {user && user.role === "BUYER" && (
-          <Link
-            to="/profile"
-            style={{
-              ...linkStyle,
-              backgroundColor: "#6a9438",
-              color: "#ffffff",
-            }}
-          >
-            My Profile
-          </Link>
-        )}
-        {isAuthenticated === true ? (
-          <button
-            onClick={handleLogout}
-            style={buttonStyle}
-            onMouseOver={(e) => Object.assign(e.target.style, buttonHoverStyle)}
-            onMouseOut={(e) => Object.assign(e.target.style, buttonStyle)}
-          >
-            Logout
-          </button>
+
+        {isAuthenticated ? (
+          <>
+            <Link to="/cart" style={iconButtonStyle}>
+              <FaShoppingCart />
+            </Link>
+            <Link to="/wallet" style={iconButtonStyle}>
+              <FaWallet />
+            </Link>
+            <div ref={dropdownRef} style={{ position: "relative" }}>
+              <button
+                style={profileButtonStyle}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <FaUserCircle />
+                <span>{user?.username || "Profile"}</span>
+                <FaChevronDown style={{ fontSize: "0.75rem" }} />
+              </button>
+              <div style={dropdownStyle}>
+                <Link
+                  to={
+                    user?.type === "ARTIST"
+                      ? "/artist-dashboard"
+                      : "/buyer-dashboard"
+                  }
+                  style={dropdownItemStyle}
+                >
+                  <FaUserCircle />
+                  Dashboard
+                </Link>
+
+                <Link to="/cart" style={dropdownItemStyle}>
+                  <FaShoppingCart />
+                  Cart
+                </Link>
+                <Link to="/wallet" style={dropdownItemStyle}>
+                  <FaWallet />
+                  Wallet
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    ...dropdownItemStyle,
+                    width: "100%",
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <FaUserCircle />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </>
         ) : (
           <Link
             to="/auth"
             style={{
               ...linkStyle,
-              backgroundColor: "#6a9438",
+              backgroundColor: "#4f46e5",
               color: "#ffffff",
             }}
-            onMouseOver={(e) => (e.target.style.backgroundColor = "#4a7225")}
-            onMouseOut={(e) => (e.target.style.backgroundColor = "#6a9438")}
           >
             Login/Sign Up
           </Link>

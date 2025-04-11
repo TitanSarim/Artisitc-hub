@@ -9,12 +9,14 @@ import { userReducer } from "./reducers/userReducer";
 import { allArtistsReducer } from "./reducers/usersReducer";
 import { artReducer } from "./reducers/artReducer";
 import { portfolioReducer } from "./reducers/portfolioReducer";
+import { walletReducer } from "./reducers/walletReducer";
 
 const reducer = combineReducers({
   user: userReducer,
   allArtists: allArtistsReducer,
   art: artReducer,
   portfolio: portfolioReducer,
+  wallet: walletReducer,
 });
 
 const persistConfig = {

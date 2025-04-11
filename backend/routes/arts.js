@@ -27,8 +27,8 @@ router.route("/art/getAllArts").get(isAuthenticatedUser, getAllArts);
 
 router.route("/art/getSingleArt/:id").get(isAuthenticatedUser, getSinglelArt);
 
-router.route("/art/getAllPublicArts").get(getAllPublicArts);
+router.route("/arts/getAllPublicArts").get(getAllPublicArts);
 
-router.route("/art/getSinglePublicArt/:id").get(getSinglelPublicArt);
+router.route("/arts/getSinglePublicArt/:id").get(getSinglelPublicArt);
 
 module.exports = router;

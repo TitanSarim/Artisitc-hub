@@ -1,133 +1,121 @@
-const errorHandler = require('../utils/errorHandler.js');
-const catchAsyncError = require('../middleware/catchAsyncError.js');
-const generatedToken = require("../utils/jwtToken")
-const setTokenCookie = require("../utils/sendToken")
-const bcrypt = require('bcryptjs');
-const { PrismaClient } = require('@prisma/client');
+const errorHandler = require("../utils/errorHandler.js");
+const catchAsyncError = require("../middleware/catchAsyncError.js");
+const generatedToken = require("../utils/jwtToken");
+const setTokenCookie = require("../utils/sendToken");
+const bcrypt = require("bcryptjs");
+const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+const resgisterUser = catchAsyncError(async (req, res, next) => {
+  const { username, email, password, type } = req.body;
 
+  const file = req.file.filename;
 
-const resgisterUser = catchAsyncError(async(req, res, next) => {
+  console.log("file", file);
 
-    const {username, email, password, type} = req.body;
+  try {
+    const emails = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    const file = req.file.filename
+    const userNames = await prisma.user.findUnique({
+      where: { username },
+    });
 
-    console.log("file", file)
-
-    try {
-
-        const emails = await prisma.user.findUnique({
-            where: {email}
-        })
-
-        const userNames = await prisma.user.findUnique({
-            where: {username}
-        })
-
-        if(emails !== null && userNames !== null){
-            return next (new errorHandler('User with email or username already exists', 401))
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10)
-
-        const user = await prisma.user.create({
-            data:{
-                username,
-                email,
-                password: hashedPassword,
-                type: type,
-                isVerifiedArtist: type === "BUYER" ? true : false,
-                files: JSON.stringify(file)
-            }
-        })
-
-        const token = generatedToken(user.userid, user.email, user.username)
-        setTokenCookie(res, token)
-
-        console.log("User created successfully");
-
-
-        res.status(201).json({
-            success: true,
-            message: "Account created successfully",
-            user: user,
-            token
-        })
-
-
-    } catch (error) {
-        return next(new errorHandler(error, 500))
+    if (emails !== null && userNames !== null) {
+      return next(
+        new errorHandler("User with email or username already exists", 401)
+      );
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-})
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+        type: type,
+        isVerifiedArtist: type === "BUYER" ? true : false,
+        files: JSON.stringify(file),
+      },
+    });
 
+    const token = generatedToken(user.userid, user.email, user.username);
+    setTokenCookie(res, token);
 
+    console.log("User created successfully");
 
-const loginUser = catchAsyncError(async(req, res, next) => {
+    res.status(201).json({
+      success: true,
+      message: "Account created successfully",
+      user: user,
+      token,
+    });
+  } catch (error) {
+    return next(new errorHandler(error, 500));
+  }
+});
 
-    const {email, password} = req.body;
-    const user = req.user;
-    try {
-        
-        const user = await prisma.user.findUnique({
-            where: {email},
-        })
+const loginUser = catchAsyncError(async (req, res, next) => {
+  const { email, password } = req.body;
+  const user = req.user;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
 
-        if(!user){
-            return next(new errorHandler('Invalid Email', 400))
-        }
-
-        
-        const passwordMatches = await bcrypt.compare(password, user.password);
-
-        if(!passwordMatches){
-            return next(new errorHandler('Invalid Password', 400))
-        }
-
-        console.log('User Logged in Successfully');
-
-
-        const token = generatedToken(user.userid, user.email, user.username, user.type)
-        setTokenCookie(res, token)
-        
-
-        res.status(201).json({
-            success: true,
-            message: `Hi ${user.username} iam logged in`,
-            user: user,
-            token
-        })
-
-    } catch (error) {
-        return next(new errorHandler('Internal Server Error', 500))
+    if (!user) {
+      return next(new errorHandler("Invalid Email", 400));
     }
 
-})
+    const passwordMatches = await bcrypt.compare(password, user.password);
 
+    if (!passwordMatches) {
+      return next(new errorHandler("Invalid Password", 400));
+    }
 
+    const token = generatedToken(
+      user.userid,
+      user.email,
+      user.username,
+      user.type
+    );
+    setTokenCookie(res, token);
 
+    const userData = {
+      ...user,
+      profileImage: user.images
+        ? `${process.env.API_URL}/Images/${JSON.parse(user.images)}`
+        : null,
+    };
 
+    res.status(201).json({
+      success: true,
+      message: `Hi ${user.username} iam logged in`,
+      user: userData,
+      token,
+    });
+  } catch (error) {
+    return next(new errorHandler("Internal Server Error", 500));
+  }
+});
 
-const logout = async(req, res) => {
+const logout = async (req, res) => {
+  res.cookie("token", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
 
-    res.cookie("token", null,{
-        expires: new Date(Date.now()),
-        httpOnly: true,
-    })
-
-    res.status(200).json({
-        success: true,
-        message: "Logged Out"
-      });
-}
-
+  res.status(200).json({
+    success: true,
+    message: "Logged Out",
+  });
+};
 
 module.exports = {
-    resgisterUser,
-    loginUser,
-    logout
-}
+  resgisterUser,
+  loginUser,
+  logout,
+};
