@@ -10,6 +10,10 @@ import { allArtistsReducer } from "./reducers/usersReducer";
 import { artReducer } from "./reducers/artReducer";
 import { portfolioReducer } from "./reducers/portfolioReducer";
 import { walletReducer } from "./reducers/walletReducer";
+import { cartReducer } from "./reducers/cartReducer";
+import { orderReducer } from "./reducers/orderReducer";
+import { analyticsReducer } from "./reducers/analyticsReducer";
+import { buyersReducer } from "./reducers/buyersReducer";
 
 const reducer = combineReducers({
   user: userReducer,
@@ -17,6 +21,10 @@ const reducer = combineReducers({
   art: artReducer,
   portfolio: portfolioReducer,
   wallet: walletReducer,
+  cart: cartReducer,
+  order: orderReducer,
+  analytics: analyticsReducer,
+  buyers: buyersReducer,
 });
 
 const persistConfig = {

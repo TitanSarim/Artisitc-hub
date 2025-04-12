@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { listPublicArts } from "../actions/artActions";
+import { addToCart } from "../actions/cartActions";
+import { toast } from "react-toastify";
 
 const Artworks = () => {
   const dispatch = useDispatch();
   const { publicArts, loading, error } = useSelector((state) => state.art);
+  const { isAuthenticated } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
@@ -66,9 +69,13 @@ const Artworks = () => {
     { label: "Over $1000", value: "1000-999999" },
   ];
 
-  const handleAddToCart = (art) => {
-    // Will implement cart functionality later
-    console.log("Added to cart:", art);
+  const handleAddToCart = (artId) => {
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to cart");
+      return;
+    }
+    dispatch(addToCart(artId));
+    toast.success("Added to cart");
   };
 
   if (loading) {
@@ -162,9 +169,14 @@ const Artworks = () => {
               {art.status !== "SOLD" && (
                 <button
                   className="add-to-cart-button"
-                  onClick={() => handleAddToCart(art)}
+                  onClick={() => handleAddToCart(art.id)}
                 >
                   Add to Cart
+                </button>
+              )}
+              {art.status === "SOLD" && (
+                <button className="sold" disabled>
+                  Sold
                 </button>
               )}
             </div>
@@ -379,6 +391,16 @@ const Artworks = () => {
 
         .add-to-cart-button:active {
           transform: translateY(0);
+        }
+
+        .sold {
+          width: 100%;
+          padding: 0.8rem;
+          background-color: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: not-allowed;
         }
       `}</style>
     </div>

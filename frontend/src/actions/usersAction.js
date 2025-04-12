@@ -6,6 +6,9 @@ import {
   PUBLIC_ARTISTS_LIST_SUCCESS,
   PUBLIC_ARTISTS_LIST_FAIL,
   CLEAR_ERRORS,
+  GET_ALL_BUYERS_REQUEST,
+  GET_ALL_BUYERS_SUCCESS,
+  GET_ALL_BUYERS_FAIL,
 } from "../constants/userConstants";
 import axios from "axios";
 
@@ -23,6 +26,25 @@ export const getAllArtists = () => async (dispatch) => {
     console.error("API Error:", error);
     dispatch({
       type: GET_ALL_USERS_FAILED,
+      payload: error.response ? error.response.data.message : error.message,
+    });
+  }
+};
+
+export const getAllBuyers = () => async (dispatch) => {
+  console.log("Dispatching GET_ALL_USERS_REQUEST...");
+  try {
+    dispatch({ type: GET_ALL_BUYERS_REQUEST });
+    console.log("Making API call...");
+
+    const { data } = await axios.get("/api/v1/getallBuyers");
+    console.log("API Response:", data);
+
+    dispatch({ type: GET_ALL_BUYERS_SUCCESS, payload: data.buyers });
+  } catch (error) {
+    console.error("API Error:", error);
+    dispatch({
+      type: GET_ALL_BUYERS_FAIL,
       payload: error.response ? error.response.data.message : error.message,
     });
   }

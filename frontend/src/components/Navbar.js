@@ -8,6 +8,8 @@ import {
   FaUserCircle,
   FaChevronDown,
 } from "react-icons/fa";
+import { MdDashboard } from "react-icons/md";
+import { IoLogOut } from "react-icons/io5";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ const Navbar = () => {
   const { user, isAuthenticated } = useSelector((state) => state.user);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const { cartItems } = useSelector((state) => state.cart);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -35,6 +38,11 @@ const Navbar = () => {
       console.error("Error logging out:", error);
     }
   };
+
+  const cartQuantity = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   const navbarStyle = {
     display: "flex",
@@ -135,12 +143,19 @@ const Navbar = () => {
 
         {isAuthenticated ? (
           <>
-            <Link to="/cart" style={iconButtonStyle}>
-              <FaShoppingCart />
-            </Link>
-            <Link to="/wallet" style={iconButtonStyle}>
-              <FaWallet />
-            </Link>
+            {user?.type === "BUYER" && (
+              <>
+                <Link to="/cart" style={iconButtonStyle} className="cart-icon">
+                  <FaShoppingCart />
+                  {cartQuantity > 0 && (
+                    <span className="cart-quantity">{cartQuantity}</span>
+                  )}
+                </Link>
+                <Link to="/wallet" style={iconButtonStyle}>
+                  <FaWallet />
+                </Link>
+              </>
+            )}
             <div ref={dropdownRef} style={{ position: "relative" }}>
               <button
                 style={profileButtonStyle}
@@ -155,22 +170,27 @@ const Navbar = () => {
                   to={
                     user?.type === "ARTIST"
                       ? "/artist-dashboard"
-                      : "/buyer-dashboard"
+                      : user?.type === "BUYER"
+                      ? "/buyer-dashboard"
+                      : "/admin-dashboard"
                   }
                   style={dropdownItemStyle}
                 >
-                  <FaUserCircle />
+                  <MdDashboard size={23} />
                   Dashboard
                 </Link>
-
-                <Link to="/cart" style={dropdownItemStyle}>
-                  <FaShoppingCart />
-                  Cart
-                </Link>
-                <Link to="/wallet" style={dropdownItemStyle}>
-                  <FaWallet />
-                  Wallet
-                </Link>
+                {user?.type === "BUYER" && (
+                  <>
+                    <Link to="/cart" style={dropdownItemStyle}>
+                      <FaShoppingCart />
+                      Cart
+                    </Link>
+                    <Link to="/wallet" style={dropdownItemStyle}>
+                      <FaWallet />
+                      Wallet
+                    </Link>
+                  </>
+                )}
                 <button
                   onClick={handleLogout}
                   style={{
@@ -181,7 +201,7 @@ const Navbar = () => {
                     cursor: "pointer",
                   }}
                 >
-                  <FaUserCircle />
+                  <IoLogOut size={28} />
                   Logout
                 </button>
               </div>
@@ -200,6 +220,28 @@ const Navbar = () => {
           </Link>
         )}
       </div>
+
+      <style jsx>{`
+        .cart-icon {
+          position: relative;
+        }
+        .cart-quantity {
+          position: absolute;
+          top: -8px;
+          right: -10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #dc3545;
+          color: white;
+          font-size: 0.75rem;
+          border-radius: 50%;
+          height: 15px;
+          width: 15px;
+
+          text-align: center;
+        }
+      `}</style>
     </nav>
   );
 };

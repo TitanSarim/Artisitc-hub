@@ -12,14 +12,15 @@ import Profile from "./components/Profile";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Dashboard from "./components/admin/Dashboard";
-import ArtistsLists from "./components/admin/ArtistsLists";
+import ArtistsList from "./components/admin/ArtistsList";
 import { ToastContainer } from "react-toastify";
-import BuyersLists from "./components/admin/BuyersLists";
 import LatestArts from "./components/LatestArts";
 import ArtDetails from "./components/ArtDetails";
 import Cart from "./components/Cart";
 import Wallet from "./components/wallet/Wallet";
 import WalletWrapper from "./components/wallet/WalletWrapper";
+import MakeTransaction from "./components/MakeTransaction";
+import BuyersList from "./components/admin/BuyersList";
 
 const App = () => {
   return (
@@ -37,8 +38,8 @@ const App = () => {
         <Route path="/" element={<ProtectedRoute />}>
           {/* admin panel */}
           <Route path="/admin-dashboard" element={<Dashboard />} />
-          <Route path="/artists-lists" element={<ArtistsLists />} />
-          <Route path="/buyer-lists" element={<BuyersLists />} />
+          <Route path="/artists-lists" element={<ArtistsList />} />
+          <Route path="/buyer-lists" element={<BuyersList />} />
 
           {/* Dashboard routes */}
           <Route path="/artist-dashboard" element={<ArtistDashboard />} />
@@ -50,6 +51,7 @@ const App = () => {
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/checkOut" element={<WalletWrapper />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/make-transaction" element={<MakeTransaction />} />
         </Route>
       </Routes>
 
