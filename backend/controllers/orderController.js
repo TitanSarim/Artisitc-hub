@@ -1,209 +1,201 @@
-const prisma = require("../prisma/prisma");
+const errorHandler = require("../utils/errorHandler");
+const catchAsyncError = require("../middleware/catchAsyncError");
+const { PrismaClient } = require("@prisma/client");
 
-// Create new order
-const createOrder = async (req, res) => {
+const prisma = new PrismaClient();
+
+// Create a new order
+const createOrder = catchAsyncError(async (req, res, next) => {
   try {
-    const { artId } = req.body;
+    const { artId, quantity = 1 } = req.body;
     const userId = req.user.userid;
 
-    // Check if art exists and is available
+    // Get art details
     const art = await prisma.arts.findUnique({
-      where: { id: parseInt(artId) },
+      where: { id: artId },
+      include: { user: true },
     });
 
     if (!art) {
-      return res.status(404).json({ message: "Art not found" });
+      return next(new errorHandler("Art not found", 404));
     }
 
-    if (art.status === "SOLD") {
-      return res.status(400).json({ message: "Art is already sold" });
+    // Get buyer's wallet
+    const buyerWallet = await prisma.wallet.findUnique({
+      where: { userId },
+    });
+
+    if (!buyerWallet) {
+      return next(new errorHandler("Buyer wallet not found", 404));
     }
 
-    // Check if art is already ordered
-    const existingOrder = await prisma.order.findFirst({
-      where: {
-        artId: parseInt(artId),
-      },
-    });
+    // Calculate total price and commission
+    const totalPrice = art.price * quantity;
+    const commission = totalPrice * 0.05;
+    const sellerAmount = totalPrice - commission;
 
-    if (existingOrder) {
-      return res.status(400).json({ message: "Art is already ordered" });
+    // Check if buyer has sufficient funds
+    if (buyerWallet.amount < totalPrice) {
+      return next(new errorHandler("Insufficient funds", 400));
     }
 
-    // Check if user has enough balance in wallet
-    const userWallet = await prisma.wallet.findUnique({
-      where: { userId: userId },
+    // Start a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create the order
+      const order = await tx.order.create({
+        data: {
+          userId,
+          artId,
+          quantity,
+          totalPrice,
+          status: "completed",
+        },
+      });
+
+      // 2. Deduct amount from buyer's wallet
+      await tx.wallet.update({
+        where: { id: buyerWallet.id },
+        data: { amount: buyerWallet.amount - totalPrice },
+      });
+
+      // 3. Get seller's wallet
+      const sellerWallet = await tx.wallet.findUnique({
+        where: { userId: art.user.userid },
+      });
+
+      if (!sellerWallet) {
+        throw new Error("Seller wallet not found");
+      }
+
+      // 4. Add amount to seller's wallet
+      await tx.wallet.update({
+        where: { id: sellerWallet.id },
+        data: { amount: sellerWallet.amount + sellerAmount },
+      });
+
+      // 5. Create transaction record for buyer
+      await tx.transaction.create({
+        data: {
+          amount: totalPrice,
+          from_account: buyerWallet.id,
+          to_account: sellerWallet.id,
+          userId,
+        },
+      });
+
+      // 6. Update art status to SOLD
+      await tx.arts.update({
+        where: { id: artId },
+        data: { status: "SOLD" },
+      });
+
+      // 7. Remove item from cart
+      await tx.cart.deleteMany({
+        where: {
+          userId,
+          artId,
+        },
+      });
+
+      return order;
     });
 
-    if (!userWallet || userWallet.amount < art.price) {
-      return res.status(400).json({ message: "Insufficient balance" });
-    }
-
-    // Create order
-    const order = await prisma.order.create({
-      data: {
-        userId: userId,
-        artId: parseInt(artId),
-        quantity: 1,
-        totalPrice: art.price,
-        status: "pending",
-      },
-      include: {
-        art: true,
-      },
+    res.status(201).json({
+      success: true,
+      order: result,
     });
-
-    // Update art status to sold
-    await prisma.arts.update({
-      where: { id: parseInt(artId) },
-      data: { status: "SOLD" },
-    });
-
-    // Remove from cart if exists
-    await prisma.cart.deleteMany({
-      where: {
-        artId: parseInt(artId),
-      },
-    });
-
-    res.status(201).json(order);
   } catch (error) {
-    console.error("Error creating order:", error);
-    res.status(500).json({ message: "Error creating order" });
-  }
-};
-
-// Get user's orders
-const getOrders = async (req, res) => {
-  try {
-    const userId = req.user.userid;
-
-    const orders = await prisma.order.findMany({
-      where: { userId: userId },
-      include: {
-        art: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
-
-    res.status(200).json(orders);
-  } catch (error) {
-    console.error("Error getting orders:", error);
-    res.status(500).json({ message: "Error getting orders" });
   }
-};
+});
 
-// Get single order
-const getOrder = async (req, res) => {
+// Get all orders for a user
+const getUserOrders = catchAsyncError(async (req, res, next) => {
+  const userId = req.user.userid;
+
+  const orders = await prisma.order.findMany({
+    where: { userId },
+    include: {
+      art: {
+        include: {
+          user: {
+            select: {
+              username: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  // Format the orders with full image URLs
+  const formattedOrders = orders.map((order) => ({
+    ...order,
+    art: {
+      ...order.art,
+      image: order.art.image
+        ? `${process.env.API_URL}/Arts/${order.art.image}`
+        : null,
+    },
+  }));
+
+  res.status(200).json({
+    success: true,
+    orders: formattedOrders,
+  });
+});
+
+// Get a single order
+const getOrderDetails = catchAsyncError(async (req, res, next) => {
   try {
-    const { orderId } = req.params;
+    const orderId = parseInt(req.params.id);
     const userId = req.user.userid;
 
     const order = await prisma.order.findUnique({
-      where: { id: parseInt(orderId) },
+      where: { id: orderId },
       include: {
-        art: true,
+        art: {
+          include: {
+            user: {
+              select: {
+                username: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return next(new errorHandler("Order not found", 404));
     }
 
     if (order.userId !== userId) {
-      return res.status(403).json({ message: "Not authorized" });
+      return next(new errorHandler("Not authorized to view this order", 403));
     }
 
-    res.status(200).json(order);
+    res.status(200).json({
+      success: true,
+      order,
+    });
   } catch (error) {
-    console.error("Error getting order:", error);
-    res.status(500).json({ message: "Error getting order" });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
-};
-
-// Update order status
-const updateOrderStatus = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { status } = req.body;
-    const userId = req.user.userid;
-
-    const order = await prisma.order.findUnique({
-      where: { id: parseInt(orderId) },
-    });
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    if (order.userId !== userId) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
-    const updatedOrder = await prisma.order.update({
-      where: { id: parseInt(orderId) },
-      data: { status },
-      include: {
-        art: true,
-      },
-    });
-
-    res.status(200).json(updatedOrder);
-  } catch (error) {
-    console.error("Error updating order:", error);
-    res.status(500).json({ message: "Error updating order" });
-  }
-};
-
-// Cancel order
-const cancelOrder = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const userId = req.user.userid;
-
-    const order = await prisma.order.findUnique({
-      where: { id: parseInt(orderId) },
-    });
-
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" });
-    }
-
-    if (order.userId !== userId) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
-    if (order.status !== "pending") {
-      return res
-        .status(400)
-        .json({ message: "Only pending orders can be cancelled" });
-    }
-
-    // Update order status to cancelled
-    await prisma.order.update({
-      where: { id: parseInt(orderId) },
-      data: { status: "cancelled" },
-    });
-
-    // Update art status back to available
-    await prisma.arts.update({
-      where: { id: order.artId },
-      data: { status: "LIVE" },
-    });
-
-    res.status(200).json({ message: "Order cancelled successfully" });
-  } catch (error) {
-    console.error("Error cancelling order:", error);
-    res.status(500).json({ message: "Error cancelling order" });
-  }
-};
+});
 
 module.exports = {
   createOrder,
-  getOrders,
-  getOrder,
-  updateOrderStatus,
-  cancelOrder,
+  getUserOrders,
+  getOrderDetails,
 };

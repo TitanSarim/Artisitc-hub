@@ -36,13 +36,18 @@ const users = require("./routes/user");
 const arts = require("./routes/arts");
 const portfolio = require("./routes/portfolio");
 const walletRoutes = require("./routes/walletRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const transactionRoutes = require("./routes/transactionRoutes");
 // Use routes
 app.use("/api/v1", authentication);
 app.use("/api/v1", users);
 app.use("/api/v1", arts);
 app.use("/api/v1", portfolio);
 app.use("/api/v1", walletRoutes);
-
+app.use("/api/v1", cartRoutes);
+app.use("/api/v1", orderRoutes);
+app.use("/api/v1", transactionRoutes);
 app.use(errorMiddleware);
 
 module.exports = app;

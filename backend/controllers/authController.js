@@ -10,10 +10,6 @@ const prisma = new PrismaClient();
 const resgisterUser = catchAsyncError(async (req, res, next) => {
   const { username, email, password, type } = req.body;
 
-  const file = req.file.filename;
-
-  console.log("file", file);
-
   try {
     const emails = await prisma.user.findUnique({
       where: { email },
@@ -31,15 +27,22 @@ const resgisterUser = catchAsyncError(async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Prepare user data
+    const userData = {
+      username,
+      email,
+      password: hashedPassword,
+      type: type,
+      isVerifiedArtist: type === "BUYER" ? true : false,
+    };
+
+    // Only add files if it's an artist and file is uploaded
+    if (type === "ARTIST" && req.file) {
+      userData.files = JSON.stringify(req.file.filename);
+    }
+
     const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-        type: type,
-        isVerifiedArtist: type === "BUYER" ? true : false,
-        files: JSON.stringify(file),
-      },
+      data: userData,
     });
 
     const token = generatedToken(user.userid, user.email, user.username);

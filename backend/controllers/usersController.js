@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 
 const getAllArtists = catchAsyncError(async (req, res, next) => {
   try {
+    const user = req.user;
     if (user.type !== userType.ADMIN) {
       res.status(504).json({
         success: false,
@@ -36,6 +37,44 @@ const getAllArtists = catchAsyncError(async (req, res, next) => {
       success: true,
       message: "Users retrived successfully",
       artists: artistsWithFiles,
+    });
+  } catch (error) {
+    return next(new errorHandler(error, 500));
+  }
+});
+
+const getAllBuyers = catchAsyncError(async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user.type !== userType.ADMIN) {
+      res.status(504).json({
+        success: false,
+        message: "You are not authorized for this",
+      });
+    }
+
+    const buyers = await prisma.user.findMany({
+      where: {
+        type: userType.BUYER,
+      },
+    });
+
+    const buyersWithFiles = buyers.map((buyer) => {
+      if (buyer.files) {
+        return {
+          ...buyer,
+          fileUrl: `${process.env.API_URL}/Files/${JSON.parse(buyer.files)}`,
+        };
+      }
+      return buyer;
+    });
+
+    console.log("Users retrived successfully");
+
+    res.status(201).json({
+      success: true,
+      message: "Users retrived successfully",
+      buyers: buyersWithFiles,
     });
   } catch (error) {
     return next(new errorHandler(error, 500));
@@ -191,4 +230,5 @@ module.exports = {
   getUserProfile,
   updateUserProfile,
   getAllPublicArtists,
+  getAllBuyers,
 };
