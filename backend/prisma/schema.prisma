@@ -128,4 +128,5 @@ enum artStatus {
   LIVE
   DRAFT
   SOLD
+  REJECTED
 }

@@ -132,7 +132,11 @@ const getAllArts = catchAsyncError(async (req, res, next) => {
 const getAllPublicArts = catchAsyncError(async (req, res, next) => {
   try {
     const arts = await prisma.arts.findMany({
-      // where: { status: artStatus.LIVE },
+      where: {
+        status: {
+          in: [artStatus.LIVE, artStatus.SOLD],
+        },
+      },
       orderBy: { createdAt: "desc" },
       include: {
         user: true,

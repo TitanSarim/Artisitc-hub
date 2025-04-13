@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { listPublicArtists } from "../actions/usersAction";
 import defaultImage from "../images/albert-dera-ILip77SbmOE-unsplash.jpg";
-import { Link } from "react-router-dom";
 
 const Artists = () => {
   const dispatch = useDispatch();
@@ -14,8 +13,6 @@ const Artists = () => {
   useEffect(() => {
     dispatch(listPublicArtists());
   }, [dispatch]);
-
-  console.log("publicArtists", publicArtists);
 
   const handleViewPortfolio = (artist) => {
     setSelectedArtist(artist);

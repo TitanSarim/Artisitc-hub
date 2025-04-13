@@ -1,12 +1,12 @@
 const cron = require("node-cron");
 const path = require("path");
-const { PrismaClient, userType } = require("@prisma/client");
+const { PrismaClient, userType, artStatus } = require("@prisma/client");
 const { spawn } = require("child_process");
 const sendEmail = require("../email/sendEmail");
 
 const prisma = new PrismaClient();
 
-const runCheck = async () => {
+const runCheckPDF = async () => {
   try {
     const pendingArtist = await prisma.user.findFirst({
       where: {
@@ -75,8 +75,116 @@ const runCheck = async () => {
   }
 };
 
-// Run every minute
-// cron.schedule("* * * * *", () => {
-//   console.log("Running PDF duplicate check...");
-//   runCheck();
-// });
+const runCheckArts = async () => {
+  try {
+    const pendingArts = await prisma.arts.findFirst({
+      where: {
+        status: artStatus.DRAFT,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    console.log("pendingArts", pendingArts);
+
+    if (!pendingArts) {
+      console.log("No pending artist or no file found.");
+      return;
+    }
+
+    // Get all existing approved arts except the current one
+    const existingArts = await prisma.arts.findMany({
+      where: {
+        status: artStatus.LIVE,
+        id: {
+          not: pendingArts.id,
+        },
+      },
+    });
+
+    const artPath = path.join(__dirname, "../Arts", pendingArts.image);
+    const existingArtPaths = existingArts.map((art) =>
+      path.join(__dirname, "../Arts", art.image)
+    );
+
+    // Convert array to comma-separated string for Python
+    const existingArtPathsStr = existingArtPaths.join(",");
+
+    return new Promise((resolve, reject) => {
+      const pythonProcess = spawn("python", [
+        path.join(__dirname, "../python/CheckArts.py"),
+        artPath,
+        existingArtPathsStr,
+      ]);
+
+      let result = "";
+      let error = "";
+
+      pythonProcess.stdout.on("data", (data) => {
+        result += data.toString();
+      });
+
+      pythonProcess.stderr.on("data", (data) => {
+        error += data.toString();
+      });
+
+      pythonProcess.on("close", async (code) => {
+        if (code !== 0) {
+          console.error("Python script error:", error);
+          reject(new Error("Python script failed"));
+          return;
+        }
+
+        try {
+          const { isDuplicate, message } = JSON.parse(result);
+
+          // Update the art status based on duplication check
+          await prisma.arts.update({
+            where: {
+              id: pendingArts.id,
+            },
+            data: {
+              status: isDuplicate ? artStatus.REJECTED : artStatus.LIVE,
+            },
+          });
+
+          if (isDuplicate) {
+            await sendEmail({
+              email: pendingArts.user.email,
+              subject: "Duplicate Art Submission Detected",
+              payload: `Dear ${pendingArts.user.username},\n\nOur system has detected that your submitted art contains duplicate content. Please revise your submission.\n\nRegards,\nTeam`,
+            });
+          }
+          if (!isDuplicate) {
+            await sendEmail({
+              email: pendingArts.user.email,
+              subject: "Art Approved",
+              payload: `Dear ${pendingArts.user.username},\n\nYour art has been approved.\n\nRegards,\nTeam`,
+            });
+          }
+
+          resolve({ isDuplicate, message });
+        } catch (err) {
+          console.error("Error parsing Python result:", err);
+          reject(err);
+        }
+      });
+    });
+  } catch (err) {
+    console.error("Cron job error:", err);
+    throw err;
+  }
+};
+
+//Run every minute
+cron.schedule("*/10 * * * *", () => {
+  console.log("Running PDF duplicate check...");
+  runCheckPDF();
+});
+
+//Run every 10 minutes
+cron.schedule("*/10 * * * *", () => {
+  console.log("Running art duplicate check...");
+  runCheckArts();
+});

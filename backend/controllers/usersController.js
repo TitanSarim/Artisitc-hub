@@ -206,7 +206,7 @@ const getAllPublicArtists = catchAsyncError(async (req, res, next) => {
     const formattedUsers = users.map((user) => ({
       ...user,
       profileImage: user.images
-        ? `${process.env.API_URL}/Images/${user.images}`
+        ? `${process.env.API_URL}/Images/${JSON.parse(user.images)}`
         : null,
       portfolio: user.portfolio.map((portfolio) => ({
         ...portfolio,
