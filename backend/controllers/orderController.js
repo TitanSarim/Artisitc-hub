@@ -64,7 +64,12 @@ const createOrder = catchAsyncError(async (req, res, next) => {
       });
 
       if (!sellerWallet) {
-        throw new Error("Seller wallet not found");
+        await tx.wallet.create({
+          data: {
+            amount: 0,
+            userId: art.user.userid,
+          },
+        });
       }
 
       // 4. Add amount to seller's wallet

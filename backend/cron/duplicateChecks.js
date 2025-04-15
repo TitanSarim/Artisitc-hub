@@ -184,7 +184,7 @@ cron.schedule("*/10 * * * *", () => {
 });
 
 //Run every 10 minutes
-cron.schedule("*/10 * * * *", () => {
-  console.log("Running art duplicate check...");
-  runCheckArts();
-});
+// cron.schedule("*/10 * * * *", () => {
+//   console.log("Running art duplicate check...");
+//   runCheckArts();
+// });
