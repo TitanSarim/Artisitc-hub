@@ -33,7 +33,7 @@ const Auth = () => {
     } else if (isAuthenticated && user.type === "ARTIST") {
       naviagte("/artist-dashboard");
     } else if (isAuthenticated && user.type === "BUYER") {
-      naviagte("/buyer-dashboard");
+      naviagte("/artworks");
     }
   }, [dispatch, error, isAuthenticated, naviagte, user]);
 
@@ -47,19 +47,21 @@ const Auth = () => {
     setErrorMessage(""); // Clear previous error messages
 
     // Validation for username
-    const usernameRegex = /^.{6,20}$/;
-    if (!usernameRegex.test(fullName)) {
-      setErrorMessage("Username must be between 8 and 20 characters long.");
-      return;
-    }
+    if (isSignUp === true) {
+      const usernameRegex = /^.{6,20}$/;
+      if (!usernameRegex.test(fullName)) {
+        setErrorMessage("Username must be between 8 and 20 characters long.");
+        return;
+      }
 
-    // Validation for password
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setErrorMessage(
-        "Password must be at least 8 characters long, contain one uppercase letter, and include letters and numbers."
-      );
-      return;
+      // Validation for password
+      const passwordRegex = /^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
+      if (!passwordRegex.test(password)) {
+        setErrorMessage(
+          "Password must be at least 8 characters long, contain one uppercase letter, and include letters and numbers."
+        );
+        return;
+      }
     }
 
     const RegisterformData = new FormData();

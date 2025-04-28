@@ -1,6 +1,7 @@
 const errorHandler = require("../utils/errorHandler.js");
 const catchAsyncError = require("../middleware/catchAsyncError.js");
 const { PrismaClient, artStatus } = require("@prisma/client");
+const { runCheckArts } = require("../cron/duplicateChecks.js");
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,8 @@ const createArt = catchAsyncError(async (req, res, next) => {
         userId,
       },
     });
+
+    const res = runCheckArts();
 
     res.status(201).json({
       success: true,

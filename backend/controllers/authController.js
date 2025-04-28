@@ -33,7 +33,7 @@ const resgisterUser = catchAsyncError(async (req, res, next) => {
       email,
       password: hashedPassword,
       type: type,
-      isVerifiedArtist: type === "BUYER" ? true : false,
+      isVerifiedArtist: true,
     };
 
     // Only add files if it's an artist and file is uploaded
