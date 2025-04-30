@@ -108,7 +108,7 @@ const ArtistDashboard = () => {
         </div>
       ) : (
         <div className="not-verified">
-          <p>You are not approved by admin</p>
+          <p>You are not approved by admin, Please wait few minutes</p>
         </div>
       )}
       <style jsx>{`

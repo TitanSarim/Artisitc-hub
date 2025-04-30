@@ -47,13 +47,12 @@ const runCheckPDF = async () => {
       const isDuplicate = result.toLowerCase() === "true";
       console.log(`Duplicate status: ${isDuplicate}`);
 
-      // Update user block status
-      await prisma.user.update({
-        where: { userid: pendingArtist.userid },
-        data: { isBlocked: isDuplicate },
-      });
-
       if (isDuplicate) {
+        // Update user block status
+        await prisma.user.update({
+          where: { userid: pendingArtist.userid },
+          data: { isBlocked: true, isVerifiedArtist: false },
+        });
         // Send email notification
         await sendEmail({
           email: pendingArtist.email,
@@ -65,7 +64,16 @@ const runCheckPDF = async () => {
           `User ${pendingArtist.email} has been blocked due to duplication.`
         );
       } else {
+        await prisma.user.update({
+          where: { userid: pendingArtist.userid },
+          data: { isBlocked: false, isVerifiedArtist: true },
+        });
         console.log(`No duplicates found for ${pendingArtist.email}`);
+        await sendEmail({
+          email: pendingArtist.email,
+          subject: "Congratulations",
+          payload: `Dear ${pendingArtist.name},\n\n Your account has been approved please logout and login again.\n\nRegards,\nTeam`,
+        });
       }
 
       console.log(`Python script finished with code ${code}`);
@@ -177,11 +185,11 @@ const runCheckArts = async () => {
   }
 };
 
-//Run every minute
-// cron.schedule("*/10 * * * *", () => {
-//   console.log("Running PDF duplicate check...");
-//   runCheckPDF();
-// });
+// Run every minute
+cron.schedule("*/1 * * * *", () => {
+  console.log("Running PDF duplicate check...");
+  runCheckPDF();
+});
 
 //Run every 10 minutes
 cron.schedule("*/10 * * * *", () => {
