@@ -104,7 +104,7 @@ const runCheckArts = async () => {
     // Get all existing approved arts except the current one
     const existingArts = await prisma.arts.findMany({
       where: {
-        status: artStatus.LIVE,
+        in: [artStatus.LIVE, artStatus.SOLD],
         id: {
           not: pendingArts.id,
         },
@@ -117,7 +117,7 @@ const runCheckArts = async () => {
     );
 
     // Convert array to comma-separated string for Python
-    const existingArtPathsStr = existingArtPaths.join(",");
+    const existingArtPathsStr = JSON.stringify(existingArtPaths);
 
     return new Promise((resolve, reject) => {
       const pythonProcess = spawn("python", [
@@ -192,7 +192,7 @@ cron.schedule("*/1 * * * *", () => {
 });
 
 //Run every 10 minutes
-cron.schedule("*/10 * * * *", () => {
+cron.schedule("*/1 * * * *", () => {
   console.log("Running art duplicate check...");
   runCheckArts();
 });

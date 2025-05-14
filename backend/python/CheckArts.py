@@ -3,6 +3,8 @@ import sys
 import json
 from typing import Tuple, List
 import logging
+from PIL import Image
+import imagehash
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
