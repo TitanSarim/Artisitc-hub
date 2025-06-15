@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { clearErrors, login, register } from "../../actions/userAction";
 
-import "../../styles/auth.css";
 import { toast } from "react-toastify";
 const Auth = () => {
   const dispatch = useDispatch();

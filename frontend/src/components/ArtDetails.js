@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getPublicArtDetails } from "../actions/artActions";
+import { Recommendation } from "./Recommendation";
 
 const ArtDetails = () => {
   const dispatch = useDispatch();
@@ -58,6 +59,8 @@ const ArtDetails = () => {
       </div>
     );
   }
+
+  console.log("Public Art Details:", publicArt);
 
   return (
     <div className="art-details-container">
@@ -121,6 +124,10 @@ const ArtDetails = () => {
             <button className="purchase-button">Purchase Artwork</button>
           )}
         </div>
+      </div>
+
+      <div>
+        <Recommendation latestArts={publicArt.relatedArts} />
       </div>
 
       <style jsx>{`

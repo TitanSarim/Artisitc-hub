@@ -39,6 +39,7 @@ const walletRoutes = require("./routes/walletRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const chat = require("./routes/chat.router");
 // Use routes
 app.use("/api/v1", authentication);
 app.use("/api/v1", users);
@@ -48,6 +49,7 @@ app.use("/api/v1", walletRoutes);
 app.use("/api/v1", cartRoutes);
 app.use("/api/v1", orderRoutes);
 app.use("/api/v1", transactionRoutes);
+app.use("/api/v1", chat);
 app.use(errorMiddleware);
 
 module.exports = app;

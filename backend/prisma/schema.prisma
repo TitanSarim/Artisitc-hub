@@ -28,6 +28,11 @@ model User {
   wallet    Wallet?
   carts     Cart[]
   orders    Order[]
+
+  // Relations for Message
+  sentChats     Chat[]   @relation("ChatSender")
+  receivedChats Chat[]   @relation("ChatReceiver")
+
 }
 
 model Portfolio{
@@ -117,6 +122,20 @@ model Order{
 
   @@unique([artId]) // Each art can only be ordered once
 }
+
+// Chat (for in-app communication):
+model Chat {
+  id         String   @id @default(uuid())
+  senderId   Int
+  receiverId Int
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  sender   User   @relation("ChatSender", fields: [senderId], references: [userid])
+  receiver User   @relation("ChatReceiver", fields: [receiverId], references: [userid])
+
+  @@map("chats")
+}
+
 
 enum userType {
   BUYER

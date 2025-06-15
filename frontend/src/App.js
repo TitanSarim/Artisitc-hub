@@ -21,6 +21,7 @@ import Wallet from "./components/wallet/Wallet";
 import WalletWrapper from "./components/wallet/WalletWrapper";
 import MakeTransaction from "./components/MakeTransaction";
 import BuyersList from "./components/admin/BuyersList";
+import ChatView from "./components/chat/ChatView";
 
 const App = () => {
   return (
@@ -47,6 +48,9 @@ const App = () => {
           {/* Role selection route */}
           <Route path="/select-role" element={<RoleSelection />} />
           <Route path="/profile" element={<Profile />} />
+          {/* Chat route */}
+          <Route path="/chat" element={<ChatView />} />
+          {/* Latest Arts route */}
           {/* Wallet and Cart routes */}
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/checkOut" element={<WalletWrapper />} />

@@ -186,13 +186,13 @@ const runCheckArts = async () => {
 };
 
 // Run every minute
-cron.schedule("*/1 * * * *", () => {
-  console.log("Running PDF duplicate check...");
-  runCheckPDF();
-});
+// cron.schedule("*/1 * * * *", () => {
+//   console.log("Running PDF duplicate check...");
+//   runCheckPDF();
+// });
 
 //Run every 10 minutes
-cron.schedule("*/1 * * * *", () => {
-  console.log("Running art duplicate check...");
-  runCheckArts();
-});
+// cron.schedule("*/1 * * * *", () => {
+//   console.log("Running art duplicate check...");
+//   runCheckArts();
+// });

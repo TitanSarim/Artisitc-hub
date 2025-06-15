@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import { IoLogOut } from "react-icons/io5";
+import { IoChatbox } from "react-icons/io5";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -143,6 +144,10 @@ const Navbar = () => {
 
         {isAuthenticated ? (
           <>
+            <Link to="/chat" style={iconButtonStyle} className="cart-icon">
+              <IoChatbox />
+            </Link>
+
             {user?.type === "BUYER" && (
               <>
                 <Link to="/cart" style={iconButtonStyle} className="cart-icon">

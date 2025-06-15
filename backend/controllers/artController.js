@@ -210,6 +210,28 @@ const getSinglelPublicArt = catchAsyncError(async (req, res, next) => {
       return next(new errorHandler("Art not found", 404));
     }
 
+    const relatedArtsData = await prisma.arts.findMany({
+      where: {
+        status: "LIVE",
+        NOT: { id },
+      },
+      include: {
+        user: true,
+      },
+      take: 6,
+    });
+
+    const relatedArts = relatedArtsData.map((art) => ({
+      ...art,
+      imageUrl: art.image ? `${process.env.API_URL}/Arts/${art.image}` : null,
+      user: {
+        ...art.user,
+        profileImage: art.user.images
+          ? `${process.env.API_URL}/Images/${JSON.parse(art.user.images)}`
+          : null,
+      },
+    }));
+
     const artWithUrl = {
       ...art,
       imageUrl: art.image ? `${process.env.API_URL}/Arts/${art.image}` : null,
@@ -219,7 +241,10 @@ const getSinglelPublicArt = catchAsyncError(async (req, res, next) => {
           ? `${process.env.API_URL}/Images/${JSON.parse(art.user.images)}`
           : null,
       },
+      relatedArts: relatedArts,
     };
+
+    console.log("Public Art Details:", artWithUrl);
 
     res.status(200).json({
       success: true,

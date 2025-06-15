@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { listPublicArtists } from "../actions/usersAction";
 import defaultImage from "../images/albert-dera-ILip77SbmOE-unsplash.jpg";
+import { useNavigate } from "react-router-dom";
 
 const Artists = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { publicArtists, loading, error } = useSelector(
     (state) => state.allArtists
   );
@@ -39,6 +41,10 @@ const Artists = () => {
     );
   }
 
+  const handleNewChat = (artist) => {
+    navigate(`/chat?receiverId=${artist.userid}`);
+  };
+
   return (
     <div className="artists-container">
       <h1 className="page-title">Our Artists</h1>
@@ -71,12 +77,20 @@ const Artists = () => {
                   </strong>
                 </span>
               </div>
-              <button
-                className="portfolio-button"
-                onClick={() => handleViewPortfolio(artist)}
-              >
-                View Portfolio
-              </button>
+              <div className="artist-actions-buttons">
+                <button
+                  className="portfolio-button"
+                  onClick={() => handleViewPortfolio(artist)}
+                >
+                  View Portfolio
+                </button>
+                <button
+                  className="portfolio-button"
+                  onClick={() => handleNewChat(artist)}
+                >
+                  Chat
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -178,6 +192,13 @@ const Artists = () => {
           position: relative;
           padding-top: 100%;
           background: #f3f4f6;
+        }
+
+        .artist-actions-buttons {
+          display: flex;
+          flex-direction: row;
+          gap: 10px;
+          margin-top: 10px;
         }
 
         .artist-image {

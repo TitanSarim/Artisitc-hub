@@ -7,6 +7,7 @@ const {
   updateUserProfile,
   getAllPublicArtists,
   getAllBuyers,
+  getUserProfileForMessageService,
 } = require("../controllers/usersController");
 const { uploadImage } = require("../middleware/saveImage");
 
@@ -20,5 +21,9 @@ router
   .route("/user/updateUserProfile")
   .put(isAuthenticatedUser, uploadImage.single("file"), updateUserProfile);
 router.route("/user/getAllPublicArtists").get(getAllPublicArtists);
+
+router
+  .route("/user-profile-for-message-service/:id")
+  .get(getUserProfileForMessageService);
 
 module.exports = router;

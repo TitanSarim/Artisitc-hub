@@ -224,6 +224,44 @@ const getAllPublicArtists = catchAsyncError(async (req, res, next) => {
   }
 });
 
+const getUserProfileForMessageService = catchAsyncError(async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Profile id is required",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        userid: parseInt(userId),
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User found",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+});
+
 module.exports = {
   getAllArtists,
   getUpdateStatus,
@@ -231,4 +269,5 @@ module.exports = {
   updateUserProfile,
   getAllPublicArtists,
   getAllBuyers,
+  getUserProfileForMessageService,
 };
